@@ -491,16 +491,6 @@ print(classification_report(test.gender, pred))
 print(precision_score(test.gender, pred, pos_label='Male'))
 # (정답) 0.96 <= 0.9596354166666666
 
-
-
-
-
-
-
-
-
-
-
 #%%
 
 # =============================================================================
@@ -530,6 +520,9 @@ print(precision_score(test.gender, pred, pos_label='Male'))
 # #3
 # from sklearn.linear_model import LinearRegression
 
+import pandas as pd
+data4 = pd.read_csv('./dataset/Dataset_04.csv')
+
 #%%
 
 # =============================================================================
@@ -540,12 +533,18 @@ print(precision_score(test.gender, pred, pos_label='Male'))
 # 상관계수를 소수점 셋째 자리에서 반올림하여 소수점 둘째 자리까지만 기술하시오. 
 # (답안 예시) 0.55
 # =============================================================================
+data4.columns
+# ['LOCATION', 'SUBJECT', 'TIME', 'Value']
+q1 = data4[data4.LOCATION == 'KOR'][['TIME', 'Value']]
+
+q1_tab = pd.pivot_table(q1, index='TIME',
+                        values='Value',
+                        aggfunc='sum').reset_index()
 
 
+q1_tab.corr().loc['TIME', 'Value']
 
-
-
-
+# (정답) 0.9601244896033334 => 0.96
 
 #%%
 
@@ -556,10 +555,35 @@ print(precision_score(test.gender, pred, pos_label='Male'))
 # - 두 국가 간의 연도별 소비량 차이가 없는 것으로 판단할 수 있는 육류 종류를 모두
 # 적으시오. (알파벳 순서) (답안 예시) BEEF, PIG, POULTRY, SHEEP
 # =============================================================================
+# 1. 한국과 일본 데이터 필터링
+q2 = data4[data4.LOCATION.isin(['KOR','JPN'])]
+# 2. 육류 종류 추출
 
+sub_list = q2.SUBJECT.unique()
 
+# 3. 종류별로 대응인 T-test에 들어가도록 데이터 순서를 맞추어야 함.
+temp = q2[q2.SUBJECT == 'BEEF']
+tab = pd.pivot_table(temp, index='TIME',
+                     columns='LOCATION',
+                     values='Value').dropna()
+# 4. 육류 종류별로 대응인 T-test를 적용
+from scipy.stats import ttest_rel
 
+ttest_rel(tab['KOR'], tab['JPN'])
 
+# 5.  소비량 차이가 없는 것으로 판단할 수 있는 육류 종류를 모두 적기
+q2_out = []
+for i in sub_list:
+    temp=q2[q2.SUBJECT == i]
+    tab = pd.pivot_table(temp, index='TIME',
+                         columns='LOCATION',
+                         values='Value').dropna()
+    pvalue=ttest_rel(tab['KOR'], tab['JPN']).pvalue
+    q2_out = q2_out+[[i, pvalue]]
+q2_out=pd.DataFrame(q2_out, columns=['sub', 'pvalue'])
+q2_out.pvalue >= 0.05
+
+# (정답) POULTRY
 
 
 #%%
