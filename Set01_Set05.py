@@ -193,7 +193,7 @@ q2['Age_gr'] = np.where(q2.Age < 20, 10,
 # - Na_K_gr 컬럼을 만들고 Na_to_k 값이 10이하는 ‘Lv1’, 20이하는 ‘Lv2’, 30이하는 ‘Lv3’, 30 
 # 초과는 ‘Lv4’로 변환하시오.
 
-q2['Na_to_K'] = np.where(q2.Na_to_K <= 10, 'Lv1',
+q2['Na_K_gr'] = np.where(q2.Na_to_K <= 10, 'Lv1',
                          np.where(q2.Na_to_K <= 20, 'Lv2',
                                   np.where(q2.Na_to_K <= 30, 'Lv3','Lv4')))
 
@@ -212,20 +212,49 @@ from scipy.stats import chi2_contingency # 카이 스퀘어 검정 함수
 # 입력 데이터가 빈도표로 구성 - 카이스퀘어 검정의 특성
 # - 적합성 : 변수1개, 독립성 : 변수2개, 동질성 : 변수2개 검정
 # - 유의수준 0.05 p-value
+# (a) 입력표 작성
+#tab = pd.crosstab(index=q2['Sex'], columns=q2['Drug'])
 
+# (b) 카이스퀘어 검정
+# chi2_contingency(tab)
+# (2.119248418109203,  # 카이스퀘어 통계량
+# 0.7138369773987128,  # p-Value (유의확률)
+# 4,                   # 자유도
+# array([[43.68, 11.04,  7.68,  7.68, 25.92],
+#        [47.32, 11.96,  8.32,  8.32, 28.08]]))
 
+# for loop로 통합.
+var_list = ['Sex', 'BP', 'Cholesterol','Age_gr', 'Na_K_gr']
 
+q2_out = []
+for i in var_list:
+    tab = pd.crosstab(index=q2[i], columns=q2['Drug'])
+    pvalue = chi2_contingency(tab)[1]
+    q2_out = q2_out+[[i, pvalue]]  # list 단위로 들어올수 있도록
+    
 
 # 4. 각 결과를 종합, 연관성 있는 변수 수 파악
+
+q2_out = pd.DataFrame(q2_out, columns=['var', 'pvalue'])
+
+# H0(귀무가설) : 서로독립이다.
+# H1(대립가설) : 서로독립이 아니다.
+# 판정기준:
+# - 유의수준(0.05, 0.01)기준으로 p-value가 유의수준보다 작으면 귀무가설 기각
+
+(q2_out.pvalue < 0.05).sum()
+
+
+                      
 
 
 
 # 5. 연관성 있는 변수 중에서 가장 큰 p-value를 찾아야함.
 
+q2_out[q2_out.pvalue < 0.05]['pvalue'].max()
 
 
-
-
+# (정답) 4, 0.00070
 
 
 
