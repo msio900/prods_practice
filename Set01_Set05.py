@@ -28,7 +28,9 @@ Created on Sat Aug 21 12:53:16 2021
 # =============================================================================
 # =============================================================================
 
+import pandas as pd;
 
+data1 = pd.read_csv('./Dataset/DataSet_01.csv')
 
 
 #%%
@@ -37,6 +39,14 @@ Created on Sat Aug 21 12:53:16 2021
 # 1. 데이터 세트 내에 총 결측값의 개수는 몇 개인가? (답안 예시) 23
 # =============================================================================
 
+data1.isna().sum()
+data1.isna().sum().sum() # 집계 함수
+
+# (정답) 26
+
+# 행단위당 결측치 확인
+data1.isna().any(axis=1) # axis 로 행의 방향을 바꿈. 
+data1.isna().any(axis=1).sum()
 
 
 
@@ -49,10 +59,24 @@ Created on Sat Aug 21 12:53:16 2021
 # 자리에서 반올림하여 소수점 넷째 자리까지 기술하시오. (답안 예시) 0.1234
 # =============================================================================
 
+data1.columns
+# ['TV', 'Radio', 'Social_Media', 'Influencer', 'Sales']
+# 변수 체크
+x_var=['TV', 'Radio', 'Social_Media', 'Influencer', 'Sales']
 
+# 상관계수
+q2 = data1[x_var]
 
+q2 = data1[x_var].corr()
+print(q2)
 
+# 매출액과 가장 강한 상관관계 : 기준 변수 확인
+q2.drop('Sales')['Sales'].abs().max() TV   # 0.999497444941335
+q2.drop('Sales')['Sales'].abs().nlargest(1) # TV    0.999497
+q2.drop('Sales')['Sales'].abs().argmax() # 0
+q2.drop('Sales')['Sales'].abs().idxmax() #'TV'
 
+# (정답) 0.999497444941335 -> 0.9995
 
 
 #%%
@@ -66,10 +90,29 @@ Created on Sat Aug 21 12:53:16 2021
 # =============================================================================
 
 
+# 1. 입력, 출력 변수 확인
+x_var=['TV', 'Radio', 'Social_Media']
 
 
+# 2. 회귀분석, 함수 지정이 있는지 확인
+from sklearn.linear_model import LinearRegression # 사용
+from statsmodels.formula.api import ols
+from statsmodels.api import OLS, add_constant
+
+# 3. 전처리 확인
+q3=data1.dropna()
+
+# 4. 모델 생성
+lm = LinearRegression().fit(q3[x_var], q3.Sales)
 
 
+# 5. 답과 관련된 통계량 체크 리턴
+# - 회귀 계수를 큰 것에서부터 작은 것 순으로
+
+lm.coef_
+#[ 3.56256963, -0.00397039,  0.00496402]
+
+# (정답) 3.562,   0.004, -0.003
 
 
 
