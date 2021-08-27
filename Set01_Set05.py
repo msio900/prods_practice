@@ -241,12 +241,9 @@ q2_out = pd.DataFrame(q2_out, columns=['var', 'pvalue'])
 # H1(대립가설) : 서로독립이 아니다.
 # 판정기준:
 # - 유의수준(0.05, 0.01)기준으로 p-value가 유의수준보다 작으면 귀무가설 기각
+# - 1종 오류가 더 위험함.
 
 (q2_out.pvalue < 0.05).sum()
-
-
-                      
-
 
 
 # 5. 연관성 있는 변수 중에서 가장 큰 p-value를 찾아야함.
@@ -272,19 +269,33 @@ q2_out[q2_out.pvalue < 0.05]['pvalue'].max()
 # 12.345
 # =============================================================================
 
+# 1. 변수 변환 (범주형 -> 수치형)
+q3 = data2.copy()  # 데이터를 카피함.
 
+q3['Sex_cd'] = np.where(q3.Sex=='M', 0, 1)
+q3['BP_cd'] = np.where(q3.BP=='LOW', 0,
+                       np.where(q3.BP=='NORMAL', 1, 2))
+q3['Ch_cd'] = np.where(q3.Cholesterol=='NORMAL', 0, 1)
 
+# 2. 의사결정나무 모델 적용 : 입력/출력 변수 확인 포함
+# 입력 : Age, Na_to_K, Sex_cd, BP_cd, Ch_cd를 Feature로
+# 출력 : Drug를 Label
+from sklearn.tree import DecisionTreeClassifier, export_text, plot_tree
 
+x_var=['Age', 'Na_to_K', 'Sex_cd', 'BP_cd', 'Ch_cd']
+dt = DecisionTreeClassifier().fit(q3[x_var], q3.Drug)
 
+# - random state가 나오는지 확인해야 함.
 
+# 3. Root Node의 split Feature와 split value 찾기
+export_text(dt, feature_names=x_var)
+plot_tree(dt,
+          max_depth=2,
+          feature_names=x_var,
+          class_names=q3.Drug.unique(),
+          precision=2)
 
-
-
-
-
-
-
-
+# (정답) Na_to_K <= 14.83
 
 #%%
 
