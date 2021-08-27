@@ -71,7 +71,7 @@ q2 = data1[x_var].corr()
 print(q2)
 
 # 매출액과 가장 강한 상관관계 : 기준 변수 확인
-q2.drop('Sales')['Sales'].abs().max() TV   # 0.999497444941335
+q2.drop('Sales')['Sales'].abs().max() # TV 0.999497444941335
 q2.drop('Sales')['Sales'].abs().nlargest(1) # TV    0.999497
 q2.drop('Sales')['Sales'].abs().argmax() # 0
 q2.drop('Sales')['Sales'].abs().idxmax() #'TV'
@@ -323,6 +323,9 @@ plot_tree(dt,
 # =============================================================================
 # =============================================================================
 
+import pandas as pd
+
+data3 = pd.read_csv('./Dataset/Dataset_03.csv')
 
 
 #%%
@@ -333,15 +336,28 @@ plot_tree(dt,
 # 정의할 때, 이상치에 해당하는 데이터는 몇 개인가? (답안 예시) 10
 # =============================================================================
 
+q1 = data3.copy()
+
+# 1. 새로운 변수 유무 확인 : 새로운 변수 생성하라는 의미
+q1['forehead_ratio'] = q1['forehead_width_cm'] / q1['forehead_height_cm']
 
 
+# 2. 기준값을 생성 : 새로운 변수 기준
+# 평균 (mean()), 표준 편차(std()), 3*표준편차,
+xbar = q1['forehead_ratio'].mean()
+std = q1['forehead_ratio'].std()
+# 3. 평균으로부터 3표준편차 밖의 경우(평균-3표준편차|평균+3표준편차)상한UU, 하한LL
+LL = xbar - (3 * std)
+UU = xbar + (3 * std)
 
 
+# 4. 상한, 하한 기준으로 비교해서 이상치 체크
+# 연산자 우선순위 고려(괄호 사용)
+# 벡터 단위에서의 `or` 연산자는 `|`
+((q1['forehead_ratio'] < LL) | (q1['forehead_ratio'] > UU)).sum()
 
-
-
-
-
+# (정답) 3
+q1[(q1['forehead_ratio'] < LL) | (q1['forehead_ratio'] > UU)]
 #%%
 
 # =============================================================================
@@ -353,16 +369,66 @@ plot_tree(dt,
 # 않을 경우 N으로 답하시오. (답안 예시) 1.234, Y
 # =============================================================================
 
+# 그룹변수, 수치형 변수(y) 존재하는지 체크 => 그룹변수의 레이블 수 확인
+# 2개 이하인 경우 => T-test
+# 2개 이상인 경우 => ANOVA
+# (분석 적용) T-test 
+# 개인 차가 없는 상황에서 대상을 봐야지 독립인지 알수 있음.
+# 스타트 지점이 다르기 때문에...동일한 짝을 짓도록 함.
+# 각각의 2017년, 2018년 지점별로 쌍을 지어줘야함.
+
+# 다른 특성이 없기에 독립으로 진행하면 됨.
+# (평균으로는 차이가 있고, 흩어진 정도)
+
+# 1. 그룹 변수 수치형 변수(y) 존재하는지 체크
+
+from scipy.stats import ttest_1samp, ttest_ind, ttest_rel, bartlett
+
+# X : 범주형  Y : 범주형 =>  카이스퀘어 검정
+# X : 범주형  Y : 수치형 
+# => X : 범주형 그룹 수 2개만 사용(2개 이하) T-test
+# => X : 범주형 그룹 수 3개 이상인 경우 사용 ANOVA
 
 
+# 2. 적용 시 등분산 유무 체크(이분산이면...)
+# bartlett : 등분산 검정/이분산 검정
+# 귀무가설이 몽땅 같다, 대립가설이 적어도 하나는 다르기 때문에,,,
+# -(조건) 검정은 이분산을 가정하고 수행.
+q1.columns
+# ['long_hair', 'forehead_width_cm', 'forehead_height_cm', 'nose_wide',
+#       'nose_long', 'lips_thin', 'distance_nose_to_lip_long', 'gender',
+#       'forehead_ratio']
+q1.gender.unique()
 
 
+g_m = q1[q1.gender=='Male']['forehead_ratio']
+g_f = q1[q1.gender=='Female']['forehead_ratio']
 
+# (a) 등분산 검정
+bartlett(g_m, g_f)
+# H0: 등분산이다. vs H1: 등분산이 아니다.(이분산)
+# BartlettResult(statistic=213.42228096491922,
+#                pvalue=2.4617792693952707e-48)
+# (등분산검정 결론)유의수준 0.05보다 p-value가 작으므로 귀무가설 기각 => 이분산
 
+# (b)
+q2_out = ttest_ind(g_m, g_f, equal_var=False) # 이분산 이기때문에, 분산이 같지 않음을 False로 표시
+# Ttest_indResult(statistic=2.9994984197511543,
+#                 pvalue=0.0027186702390657176)
 
+dir(q2_out)
 
+# - 검정통계량의 추정치는 절대값을 취한 후 소수점 셋째 자리까지 반올림하여
+# 기술하시오.
+q2_out.statistic
+# 2.9994984197511543
 
-
+# - 신뢰수준 99%에서 양측 검정을 수행하고 결과는 귀무가설 기각의 경우 Y로, 그렇지
+# 않을 경우 N으로 답하시오. (답안 예시) 1.234, Y
+# (결론) 유의수준 0.05보다 p-value가 작으므로 귀무가설을 기각한다. => 이분산
+# => 두 집단 간의 평균이 다르다.
+q2_out.pvalue < 0.01
+# (정답) 2.999, Y
 
 #%%
 
@@ -385,6 +451,40 @@ plot_tree(dt,
 # from sklearn import metrics
 # train_test_split 의 random_state = 123
 # =============================================================================
+
+# 1. 학습-테스트 데이터셋 분리
+from sklearn.model_selection import train_test_split
+# 인덱스를 기준으로...데이터를 나눌 수 있음.
+# 역슬래시는 연결된 문장이라는 사인
+train, test =\
+train_test_split(data3,
+                 test_size=0.3, 
+                 random_state=123)
+
+train.columns
+
+# 2. 입력-출력 변수 구분
+x_var = train.columns[train.dtypes != 'object']
+
+# 3. 로지스틱 모델 생성
+from sklearn.linear_model import LogisticRegression
+
+logit = LogisticRegression().fit(train[x_var], train.gender)
+
+# 4. 생성된 모델에 테스트 데이터셋 넣고 평가 : Precision, 대상 : Male
+logit.predict(test[x_var])
+# ['Male', 'Male', 'Male', ..., 'Female', 'Male', 'Male']
+logit.predict_proba(test[x_var]) # 
+# [2.13366044e-02, 9.78663396e-01],
+# [8.97496054e-05, 9.99910250e-01],
+# [2.54440411e-01, 7.45559589e-01],
+# ...,
+# [9.63308173e-01, 3.66918274e-02],
+# [8.55088606e-05, 9.99914491e-01],
+# [1.37076239e-04, 9.99862924e-01]
+
+from sklearn.metrics import classification_report, precision_score
+# accuracy는 data의 unbalance 문제를...
 
 
 
