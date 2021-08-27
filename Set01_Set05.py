@@ -472,7 +472,7 @@ from sklearn.linear_model import LogisticRegression
 logit = LogisticRegression().fit(train[x_var], train.gender)
 
 # 4. 생성된 모델에 테스트 데이터셋 넣고 평가 : Precision, 대상 : Male
-logit.predict(test[x_var])
+pred =logit.predict(test[x_var])
 # ['Male', 'Male', 'Male', ..., 'Female', 'Male', 'Male']
 logit.predict_proba(test[x_var]) # 
 # [2.13366044e-02, 9.78663396e-01],
@@ -485,9 +485,11 @@ logit.predict_proba(test[x_var]) #
 
 from sklearn.metrics import classification_report, precision_score
 # accuracy는 data의 unbalance 문제를...
+# recall precision(조화평균)이 더 빈번하게, f1 score(종합적 평가/조화평균) G score(제곱근/기하평균)/
 
-
-
+print(classification_report(test.gender, pred))
+print(precision_score(test.gender, pred, pos_label='Male'))
+# (정답) 0.96 <= 0.9596354166666666
 
 
 
