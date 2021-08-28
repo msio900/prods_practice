@@ -24,9 +24,11 @@ Created on Sat Aug 21 14:36:08 2021
 # =============================================================================
 # =============================================================================
 
-import pandas as pd
-data11 = pd.read_csv('./Dataset/Dataset_11.csv')
+#%%
 
+import pandas as pd
+
+data11=pd.read_csv('Dataset_11.csv')
 
 
 #%%
@@ -39,26 +41,28 @@ data11 = pd.read_csv('./Dataset/Dataset_11.csv')
 # 활용하시오.(답안 예시) 1
 # =============================================================================
 
+
 data11.columns
 # ['Country', 'Happiness_Rank', 'Happiness_Score', 'year']
-q1_agg = data11.groupby('Country').apply(len)
 
+q1_agg=data11.groupby('Country').apply(len)
 len(q1_agg[q1_agg < 3])
 # 3년 연속 기록되지 않은 국가 수 : 20
 
 q1_tab=pd.pivot_table(data=data11,
                       index='Country',
                       columns='year',
-                      values = 'Happiness_Score')
+                      values='Happiness_Score')
 
-q1_tab=pd.pivot_table(data=data11,
+q1_tab2=pd.pivot_table(data=data11,
                       index='Country',
                       columns='year',
+                      values='Happiness_Score',
                       aggfunc='count')
 
-con_list = q1_agg[q1_agg < 3].index
+con_list=q1_agg[q1_agg < 3].index
 
-q1 = data11[~data11.Country.isin(con_list)]
+q1=data11[~data11.Country.isin(con_list)]
 
 len(data11) # 470
 
@@ -79,21 +83,13 @@ len(q1) # 438
 q1_tab=pd.pivot_table(data=data11,
                       index='Country',
                       columns='year',
-                      values = 'Happiness_Score')
+                      values='Happiness_Score')
 
-q2 = q1_tab.dropna()
-
-q2.loc[:,'ratio'] = (q2.loc[:, 2017] - q2.loc[:, 2015])/2
-
+q2=q1_tab.dropna()
+q2.loc[:, 'ratio']=(q2.loc[:, 2017]-q2.loc[:,2015])/2
 q2['ratio'].nlargest(3).index
+
 # (정답) ['Latvia', 'Romania', 'Togo']
-
-
-
-
-
-
-
 
 #%%
 
@@ -109,44 +105,36 @@ q2['ratio'].nlargest(3).index
 # from statsmodels.formula.api import ols
 # from statsmodels.stats.anova import anova_lm
 
+
 from scipy.stats import f_oneway
 
 from statsmodels.formula.api import ols
 from statsmodels.stats.anova import anova_lm
 
+
 f_oneway(q2[2015].dropna(), q2[2016].dropna(), q2[2017].dropna())
 
-# f-통계량
-# F_onewayResult(statistic=0.004276725037689305,
+# F_onewayResult(statistic=0.004276725037689305, 
 #                pvalue=0.9957324489944479)
 
-# H0 : 모든 집단의 평균은 동일하다.(mu1=mu2=mu3)
-# H1 : 적어도 하나의 그룹의 평균은 동일하지 않다.(mu1=mu2, mu1!=m3)
-ols1 = ols('Happiness_Score~C(year)', data=q1).fit()
+# H0: 모든 집단의 평균은 동일하다(mu1=mu2=mu3)
+# H1: 적어도 하나의 그룹의 평균은 동일하지 않다(mu1=mu2, mu1!=m3)
 
-# 회귀분석을 통해 만들어진 표를 분산 분석 표로 만들어줌!
+ols1=ols('Happiness_Score~C(year)', data=q1).fit()
+
 anova_lm(ols1)
-#                   df      sum_sq   mean_sq         F    PR(>F)
+#                    df      sum_sq   mean_sq         F    PR(>F)
 # C(year)그룹간     2.0    0.011198  0.005599  0.004277  0.995732
 # Residual그룹내  435.0  569.472307  1.309132       NaN       NaN
 
 # (정답) 0.004277 -> 0.0042
 
-# 만약 차이가 난다면....다중 분석을 해야함.
-# 정확히 어떤 그룹이 어떻게 다른지 먼저 파악해야함.
+
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
 
-multi_out = pairwise_tukeyhsd(q1['Happiness_Score'], q1['year'])
+multi_out=pairwise_tukeyhsd(q1['Happiness_Score'], q1['year'])
 print(multi_out)
-# Multiple Comparison of Means - Tukey HSD, FWER=0.05
-# ==================================================
-# group1 group2 meandiff p-adj  lower  upper  reject
-# --------------------------------------------------
-#   2015   2016  -0.0112   0.9 -0.3261 0.3038  False
-#   2015   2017   -0.001   0.9 -0.3159  0.314  False
-#   2016   2017   0.0102   0.9 -0.3048 0.3251  False
-# --------------------------------------------------
-# 같은 그룹은 같은 전략을 갖고 전략을 세우면 됨.
+
 
 
 #%%
@@ -225,9 +213,9 @@ print(multi_out)
 
 
 
-
-
 # (정답) 8
+
+
 
 #%%
 
@@ -290,6 +278,7 @@ print(multi_out)
 
 
 
+
 # (정답) 0.64
 
 #%%
@@ -321,7 +310,7 @@ print(multi_out)
 
 
 
-# (정답) 0.67 (구버전에서는 안맞을 수도...ㅠㅠ)/ 이직의사변수를 문자열로 설정
+# (정답) 0.67  (이직 의사 변수를 문자열로 설정)
 
 
 #%%
@@ -387,7 +376,7 @@ print(multi_out)
 
 # (정답) 0.03
 
-# %%
+#%%
 
 # =============================================================================
 # 3.유저가 서비스 사용에 익숙해지고 컨텐츠의 좋은 내용을 서로 공유하려는 경향이
@@ -395,7 +384,7 @@ print(multi_out)
 # 작성 비율의 평균이 강좌 개설 년도별로 차이가 있는지 일원 분산 분석을 통해서
 # 알아보고자 한다. 이 때 검정통계량을 기술하시오.
 # - 검정통계량은 반올림하여 소수점 첫째 자리까지 기술하시오. (답안 예시) 0.1
-
+#
 # (참고)
 # from statsmodels.formula.api import ols
 # from statsmodels.stats.anova import anova_lm
@@ -412,11 +401,7 @@ print(multi_out)
 
 
 
-
-
-
 # (정답) 18.5
-
 
 #%%
 
@@ -451,11 +436,8 @@ print(multi_out)
 # =============================================================================
 # =============================================================================
 
-import pandas as pd
-
-pos = pd.read_csv('./Dataset/Dataset_05_Mart_POS.csv')
-list1 = pd.read_csv('./Dataset/Dataset_05_item_list.csv')
-
+pos=pd.read_csv('Dataset_05_Mart_POS.csv')
+list1=pd.read_csv('Dataset_05_item_list.csv')
 
 #%%
 
@@ -464,13 +446,9 @@ list1 = pd.read_csv('./Dataset/Dataset_05_item_list.csv')
 # 제품의 판매 개수는? (답안 예시) 1
 # =============================================================================
 
-# 전처리가 복잡함...
-q1 = pos['Date'].value_counts().nlargest(1)
+# Tip. 날짜별 제품수는 곧 날짜 빈도와 직결
+q1=pos['Date'].value_counts().nlargest(1)
 # 2015-01-21    96
-
-
-
-
 
 # (정답) 96
 
@@ -480,7 +458,7 @@ q1 = pos['Date'].value_counts().nlargest(1)
 # 2. (Dataset_05_Mart_POS.csv, Dataset_05_item_list.csv를 활용하여) 고객이 주류 제품을
 # 구매하는 요일이 다른 요일에 비해 금요일과 토요일이 많을 것이라는 가설을 세웠다. 
 # 이를 확인하기 위해 금요일과 토요일의 일별 주류제품 구매 제품 수 평균과 다른
-# 요일의 일별 주류제품 구매 제품 수 평균이 서로 다른지 비교하기 위해 <독립 2표본>
+# 요일의 일별 주류제품 구매 제품 수 평균이 서로 다른지 비교하기 위해 독립 2표본
 # t검정을 실시하시오. 
 # 해당 검정의 p-value를 기술하시오.
 # - 1분기(1월 ~ 3월) 데이터만 사용하여 분석을 실시하시오.
@@ -488,44 +466,47 @@ q1 = pos['Date'].value_counts().nlargest(1)
 # - p-value는 반올림하여 소수점 둘째 자리까지 기술하시오. (답안 예시) 0.12
 # =============================================================================
 
-# 1. 변수 생성 : 요일, 월 (1분기 추출) pandas 안에 data_access
+# (1) 변수 생성: 요일, 월(1분기 추출)
+
 pd.to_datetime(pos['Date']).dt.year
 pd.to_datetime(pos['Date']).dt.month
 pd.to_datetime(pos['Date']).dt.day
 pd.to_datetime(pos['Date']).dt.day_name(locale='ko_kr')
 
-q2 = pos.copy()
+q2=pos.copy()
 
-q2['day'] = pd.to_datetime(q2['Date']).dt.day_name(locale='ko_kr')
-q2['month'] = pd.to_datetime(pos['Date']).dt.month
+q2['day']=pd.to_datetime(q2['Date']).dt.day_name(locale='ko_kr')
+q2['month']=pd.to_datetime(q2['Date']).dt.month
 
-# 2. 데이터 결합 (주류 유무 포함)
-q2_merge = pd.merge(q2, list1,
-                    left_on='itemDescription',
-                    right_on='prod_nm',
-                    how='left')
+# (2) 데이터 결합(주류 유무 포함)
+q2_merge=pd.merge(q2, list1, 
+                  left_on='itemDescription',
+                  right_on='prod_nm', how='left')
 
-# 3. 금토/그외 변수 생성
-q2_merge['week'] = 0
-q2_merge.loc[q2_merge.day.isin(['금요일', '토요일']), 'week'] = 1
+# (3) 금토/그외 변수 생성
+q2_merge['week']=0
+q2_merge.loc[q2_merge.day.isin(['금요일','토요일']), 'week']=1
 q2_merge.columns
 
-# 4. 독립 이표본 t검정
+# (4) 독립 이표본 t 검정
 # - 1,2,3월 데이터만 필터링
-q2_merge2 = q2_merge[q2_merge.month.isin([1,2,3])]
+q2_merge2=q2_merge[q2_merge.month.isin([1,2,3])]
 
 from scipy.stats import ttest_ind
 
-# 일별 주류 제품 구매 제품 수
-q2_tab = pd.pivot_table(q2_merge2, index='Date',
-                        columns='week',
-                        values='alcohol',
-                        aggfunc='sum')
+# 일별 주류제품 구매 제품 수
+q2_tab=pd.pivot_table(q2_merge2, index='Date', 
+               columns='week',
+               values='alcohol',
+               aggfunc='sum')
 
 q2_out=ttest_ind(q2_tab[0].dropna(),
-                 q2_tab[1].dropna(),
-                 equal_var=False)
+          q2_tab[1].dropna(),
+          equal_var=False)
+
 q2_out.pvalue
+
+# (정답) 0.023062611047582393 -> 0.02
 
 #%%
 
@@ -542,31 +523,30 @@ q2_out.pvalue
 # from statsmodels.stats.anova import anova_lm
 # =============================================================================
 
-# 1.top 10제품 추출
+# (1) top10 제품 추출
 pr_list=pos['itemDescription'].value_counts().head(10).index
 
-q3 = pos[pos['itemDescription'].isin(pr_list)]
+q3=pos[pos['itemDescription'].isin(pr_list)]
 
 
-# 2. 요일별 주력 상품의 판매 개수 만들기(일별로 주력 상품의 개수를 구해야 됨.)
-q3_tab = pd.pivot_table(data=q3,index='Date',
-                        values='itemDescription',
-                        aggfunc='count')
+# (2) 요일별 주력 상품의 판매 개수 만들기(일별로 주력상품의 개수를 구해야 됨)
+
+q3_tab=pd.pivot_table(data=q3, index='Date',
+                   values='itemDescription',
+                   aggfunc='count')
+
 
 q3_tab.reset_index(inplace=True)
-q3_tab=\
-    pd.to_datetime(q3_tab['Date']).dt.dat_name(locale='ko_kr')
-# 3. 
+q3_tab['day']=\
+ pd.to_datetime(q3_tab['Date']).dt.day_name(locale='ko_kr')
+
 from statsmodels.formula.api import ols
 from statsmodels.stats.anova import anova_lm
 
 ols1=ols('itemDescription~day', data=q3_tab).fit()
 anova_lm(ols1)
 
-
-
-
-
+# (정답) 0.518128 -> 0.52
 
 
 

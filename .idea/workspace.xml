@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="a9140b42-4407-4772-a3f6-fb42733a0abb" name="Changes" comment="0828 3rd c0mmit" />
+    <list default="true" id="a9140b42-4407-4772-a3f6-fb42733a0abb" name="Changes" comment="0828 4th commit" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -36,7 +36,14 @@
       <option name="project" value="LOCAL" />
       <updated>1630120371328</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="0828 4th commit">
+      <created>1630139007314</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1630139007314</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -49,9 +56,11 @@
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="0828 3rd c0mmit" />
-    <option name="LAST_COMMIT_MESSAGE" value="0828 3rd c0mmit" />
+    <MESSAGE value="0828 4th commit" />
+    <option name="LAST_COMMIT_MESSAGE" value="0828 4th commit" />
   </component>
 </project>
