@@ -319,7 +319,7 @@ q2_tab.max()-q2_tab.min()
 # (정답) 14868
 
 
-#%%
+# %%
 
 # =============================================================================
 # 3.독립변수로 RandD_Spend, Administration, Marketing_Spend를 사용하여 Profit을 주별로
@@ -329,8 +329,45 @@ q2_tab.max()-q2_tab.min()
 # - (MAPE = Σ ( | y - y ̂ | / y ) * 100/n )
 # (답안 예시) ABC, 1.56
 # =============================================================================
+from sklearn.linear_model import LinearRegression
+q3 = data8.copy()
+var_list = ['RandD_Spend', 'Administration', 'Marketing_Spend']
+state_list = q3.State.unique()
 
+q3_out = []
+for i in state_list:
+    temp = q3[q3.State == i]
+    lm = LinearRegression().fit(temp[x_var], temp['Profit'])
+    pred = lm.predict(temp[x_var])
+    mape = (abs(temp['Profit'] - pred) / temp['Profit']).sum() * 100 / len(temp)
+    q3_out.append([i, mape])
+    
+q3_out = pd.DataFrame(q3_out, columns=['var', 'mape'])
 
+q3_out.sort_values(by='mape', ascending=True).head(1)
+
+# 주희님 
+from sklearn.linear_model import LinearRegression
+
+q3 = data8.copy()
+
+x_var_list = ['RandD_Spend', 'Administration', 'Marketing_Spend']
+
+state_list = q3.State.unique() #'New York', 'California', 'Florida'
+q3_out=[]
+
+for i in state_list:
+    temp = q3[q3.State==i]
+    lm = LinearRegression().fit(temp[x_var_list], temp['Profit'])
+    pred = lm.predict(temp[x_var_list])
+    mape = (abs(temp['Profit']-pred)/temp['Profit']).sum()*100/len(temp)
+
+    q3_out.append([i,mape])
+    
+q3_out = pd.DataFrame(q3_out, columns=['var','mape'])
+q3_out.sort_values(by='mape', ascending=True).head(1)
+
+# (정답) Florida	5.706713
 
 
 
@@ -385,7 +422,9 @@ q2_tab.max()-q2_tab.min()
 # from sklearn import metrics
 # 
 # =============================================================================
+import pandas as pd
 
+data9 = pd.read_csv('./Dataset/Dataset_09.csv')
 #%%
 
 # =============================================================================
@@ -393,8 +432,10 @@ q2_tab.max()-q2_tab.min()
 # 총 몇 개인가? (답안 예시) 1
 # =============================================================================
 
+data9.isna().sum().sum()
 
 
+# (정답) 5
 
 
 
@@ -411,14 +452,35 @@ q2_tab.max()-q2_tab.min()
 # (답안 예시) 123
 # =============================================================================
 
+q2 = data9.copy()
 
+import numpy as np
+q2['Age_gr'] = np.where(q2.Age <= 20, 10,
+                        np.where(q2.Age <= 30, 20,
+                                 np.where(q2.Age <= 40, 30,
+                                          np.where(q2.Age <= 50, 40,
+                                                   np.where(q2.Age <= 60, 50, 60)))))
 
+from scipy.stats import chi2_contingency
 
+var_list = ['Age_gr', 'Gender', 'Customer_Type', 'Class']
+# - Age_gr, Gender, Customer_Type, Class 변수가 satisfaction에 영향이 있는지
+q2_tab = pd.crosstab(index=q2['Age_gr'], columns=q2['satisfaction'])
 
+# - 연관성이 있는 것으로 파악된 변수의 검정통계량 추정치를 정수 부분만 기술
+chi, pvalue, *_ = chi2_contingency(q2_tab) # *_ 사용을 하지 않겠다는 암묵적인 약속
 
+q2_out = []
+for i in var_list:
+    q2_tab = pd.crosstab(index = q2[i], columns = q2['satisfaction'])
+    chi, pvalue, *_ = chi2_contingency(q2_tab)
+    q2_out.append([i, chi, pvalue])
+    
+q2_out = pd.DataFrame(q2_out, columns=['var', 'chi', 'pvalue'])
 
+q2_out[q2_out.pvalue < 0.05]['chi']
 
-
+# (정답) 1068.632582 => 1068
 
 
 
@@ -447,7 +509,7 @@ q2_tab.max()-q2_tab.min()
 
 
 
-
+# (정답) 0.777
 
 
 
@@ -483,8 +545,10 @@ q2_tab.max()-q2_tab.min()
 # #3
 # from sklearn.linear_model import LinearRegression
 # =============================================================================
+import pandas as pd
 
-
+data10 = pd.read_csv('./Dataset/Dataset_10.csv')
+data10 = data10.dropna(axis=1, how='all') # 결측치로만 구성된 열 삭제
 #%%
 
 # =============================================================================
@@ -495,17 +559,29 @@ q2_tab.max()-q2_tab.min()
 # (모델별 평균 → 일평균 → 최대최소 비율 계산) (답안 예시) 0.12
 # =============================================================================
 
+data10.columns
+# ['model', 'engine_power', 'age_in_days', 'km', 'previous_owners', 'price']
+# - 이전 소유자 수가 한 명이고 엔진 파워가 51인 차에 대해
 
+# 일평균을 구한 다음. 모델별 평균
 
+# 1. 이전 소유자 수가 한 명이고 엔진파워가 51인 차 추출
+q1 = data10[data10.previous_owners == 1]
+q1 = q1[q1['engine_power'] == 51]
 
+# q1 = data10[(data10.previuos_owners == 1) & (q1.engine_power ==51)]
 
+# 운행 일수를 구하라고 하는 함정이 숨어 있음.
+# 2. 모델 별 평균 : 운행 일수에 대해서도 평균을 산출해야함.
+q1_tab = pd.pivot_table(data10, index='model', values=['km', 'age_in_days'])
 
+# 3. 일평균 산출
+q1_tab['km_per_day'] = q1_tab['km'] / q1_tab['age_in_days']
 
+# 4. 가장 낮은 값을 가진 모델이 가장 큰 값을 모델에 대한 비율
+q1_tab['km_per_day'].min() / q1_tab['km_per_day'].max()
 
-
-
-
-
+# (정답) 0.968858084724013 => 0.97
 
 #%%
 
@@ -518,14 +594,20 @@ q2_tab.max()-q2_tab.min()
 # (답안 예시) 0.23, Y
 # =============================================================================
 
+min_g = q1_tab['km_per_day'].idxmin() # 'sport'
+max_g = q1_tab['km_per_day'].idxmax() # 'lounge'
 
+q2 = data10.copy()
+q2['km_per_day'] = q2['km'] / q2['age_in_days']
 
+min_dist = q2[q2.model == min_g]['km_per_day']
+max_dist = q2[q2.model == max_g]['km_per_day']
 
-
-
-
-
-
+from scipy.stats import ttest_ind
+ttest_ind(max_dist, min_dist, equal_var=True)
+# Ttest_indResult(statistic=1.5054268543179226, pvalue=0.13248244438755083)
+q2_out.pvalue < 0.05
+# (정답) 0.13248244438755083 => 0.13 N
 
 #%%
 
@@ -538,12 +620,25 @@ q2_tab.max()-q2_tab.min()
 # (답안 예시) 12345
 # =============================================================================
 
+# 1. 데이터셋 및 변수 지정
+q3=data10.copy()
 
+x_var = ['engine_power', 'age_in_days', 'km']
 
+# 2. 회귀 모델 생성
+from sklearn.linear_model import LinearRegression
+lm = LinearRegression()
+lm.fit(q3[x_var], q3.price)
 
+# 3. 새로운 데이터 생성
+new_data = np.array([[51, 400, 9500]])
+new_data2 = pd.DataFrame({
+    'engine_power':[51],
+    'age_in_days': [400],
+    'km': [9500]})
 
-
-
+lm.predict(new_data) # 
+lm.predict(new_data2)
 
 
 

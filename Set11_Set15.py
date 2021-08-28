@@ -24,6 +24,8 @@ Created on Sat Aug 21 14:36:08 2021
 # =============================================================================
 # =============================================================================
 
+import pandas as pd
+data11 = pd.read_csv('./Dataset/Dataset_11.csv')
 
 
 
@@ -37,11 +39,30 @@ Created on Sat Aug 21 14:36:08 2021
 # 활용하시오.(답안 예시) 1
 # =============================================================================
 
+data11.columns
+# ['Country', 'Happiness_Rank', 'Happiness_Score', 'year']
+q1_agg = data11.groupby('Country').apply(len)
 
+len(q1_agg[q1_agg < 3])
+# 3년 연속 기록되지 않은 국가 수 : 20
 
+q1_tab=pd.pivot_table(data=data11,
+                      index='Country',
+                      columns='year',
+                      values = 'Happiness_Score')
 
+q1_tab=pd.pivot_table(data=data11,
+                      index='Country',
+                      columns='year',
+                      aggfunc='count')
 
+con_list = q1_agg[q1_agg < 3].index
 
+q1 = data11[~data11.Country.isin(con_list)]
+
+len(data11) # 470
+
+len(q1) # 438
 
 
 #%%
@@ -55,11 +76,17 @@ Created on Sat Aug 21 14:36:08 2021
 # - 연도는 년월(YEAR_MONTH) 변수로부터 추출하며, 연도별 매출금액합계는 1월부터
 # 12월까지의 매출 총액을 의미한다. (답안 예시) Korea, Japan, China
 # =============================================================================
+q1_tab=pd.pivot_table(data=data11,
+                      index='Country',
+                      columns='year',
+                      values = 'Happiness_Score')
 
+q2 = q1_tab.dropna()
 
+q2.loc[:,'ratio'] = (q2.loc[:, 2017] - q2.loc[:, 2015])/2
 
-
-
+q2['ratio'].nlargest(3).index
+# (정답) ['Latvia', 'Romania', 'Togo']
 
 
 
@@ -82,15 +109,44 @@ Created on Sat Aug 21 14:36:08 2021
 # from statsmodels.formula.api import ols
 # from statsmodels.stats.anova import anova_lm
 
+from scipy.stats import f_oneway
 
+from statsmodels.formula.api import ols
+from statsmodels.stats.anova import anova_lm
 
+f_oneway(q2[2015].dropna(), q2[2016].dropna(), q2[2017].dropna())
 
+# f-통계량
+# F_onewayResult(statistic=0.004276725037689305,
+#                pvalue=0.9957324489944479)
 
+# H0 : 모든 집단의 평균은 동일하다.(mu1=mu2=mu3)
+# H1 : 적어도 하나의 그룹의 평균은 동일하지 않다.(mu1=mu2, mu1!=m3)
+ols1 = ols('Happiness_Score~C(year)', data=q1).fit()
 
+# 회귀분석을 통해 만들어진 표를 분산 분석 표로 만들어줌!
+anova_lm(ols1)
+#                   df      sum_sq   mean_sq         F    PR(>F)
+# C(year)그룹간     2.0    0.011198  0.005599  0.004277  0.995732
+# Residual그룹내  435.0  569.472307  1.309132       NaN       NaN
 
+# (정답) 0.004277 -> 0.0042
 
+# 만약 차이가 난다면....다중 분석을 해야함.
+# 정확히 어떤 그룹이 어떻게 다른지 먼저 파악해야함.
+from statsmodels.stats.multicomp import pairwise_tukeyhsd
 
-
+multi_out = pairwise_tukeyhsd(q1['Happiness_Score'], q1['year'])
+print(multi_out)
+# Multiple Comparison of Means - Tukey HSD, FWER=0.05
+# ==================================================
+# group1 group2 meandiff p-adj  lower  upper  reject
+# --------------------------------------------------
+#   2015   2016  -0.0112   0.9 -0.3261 0.3038  False
+#   2015   2017   -0.001   0.9 -0.3159  0.314  False
+#   2016   2017   0.0102   0.9 -0.3048 0.3251  False
+# --------------------------------------------------
+# 같은 그룹은 같은 전략을 갖고 전략을 세우면 됨.
 
 
 #%%
@@ -128,7 +184,7 @@ Created on Sat Aug 21 14:36:08 2021
 
 
 
-
+# (정답) 0.797
 
 #%%
 
@@ -143,7 +199,7 @@ Created on Sat Aug 21 14:36:08 2021
 
 
 
-
+# (정답) 0.269
 
 #%%
 
@@ -171,7 +227,7 @@ Created on Sat Aug 21 14:36:08 2021
 
 
 
-
+# (정답) 8
 
 #%%
 
@@ -213,7 +269,7 @@ Created on Sat Aug 21 14:36:08 2021
 
 
 
-
+# (정답) 0.45
 
 #%%
 
@@ -234,7 +290,7 @@ Created on Sat Aug 21 14:36:08 2021
 
 
 
-
+# (정답) 0.64
 
 #%%
 
@@ -265,7 +321,7 @@ Created on Sat Aug 21 14:36:08 2021
 
 
 
-
+# (정답) 0.67 (구버전에서는 안맞을 수도...ㅠㅠ)/ 이직의사변수를 문자열로 설정
 
 
 #%%
@@ -309,7 +365,7 @@ Created on Sat Aug 21 14:36:08 2021
 
 
 
-
+# (정답) 59
 
 #%%
 
@@ -329,9 +385,9 @@ Created on Sat Aug 21 14:36:08 2021
 
 
 
+# (정답) 0.03
 
-
-#%%
+# %%
 
 # =============================================================================
 # 3.유저가 서비스 사용에 익숙해지고 컨텐츠의 좋은 내용을 서로 공유하려는 경향이
@@ -339,7 +395,7 @@ Created on Sat Aug 21 14:36:08 2021
 # 작성 비율의 평균이 강좌 개설 년도별로 차이가 있는지 일원 분산 분석을 통해서
 # 알아보고자 한다. 이 때 검정통계량을 기술하시오.
 # - 검정통계량은 반올림하여 소수점 첫째 자리까지 기술하시오. (답안 예시) 0.1
-#
+
 # (참고)
 # from statsmodels.formula.api import ols
 # from statsmodels.stats.anova import anova_lm
@@ -359,7 +415,7 @@ Created on Sat Aug 21 14:36:08 2021
 
 
 
-
+# (정답) 18.5
 
 
 #%%
