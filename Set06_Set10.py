@@ -127,9 +127,13 @@ ols1.pvlaues # p-value
 ols1.params # 절편 및 회귀 계수
 
 (ols1.pvalues < 0.05).sum() - 1
-# 13
+# 유의한 변수 : 13 (귀무가설을 기각한 변수들)
 # https://www.statsmodels.org/stable/index.html
 
+# 유의미한 변수중 회귀계수가 음수인 변수 수
+(ols1.params[ols1.pvalues < 0.05] < 0).drop('Intercept').sum()
+# 2
+# (정답) 13, 2
 
 #%%
 
@@ -165,7 +169,9 @@ ols1.params # 절편 및 회귀 계수
 # from sklearn.linear_model import LogisticRegression
 # Solver = ‘liblinear’, random_state = 12
 # =============================================================================
+import pandas as pd
 
+data7 = pd.read_csv('./Dataset/Dataset_07.csv')
 
 #%%
 
@@ -182,12 +188,12 @@ ols1.params # 절편 및 회귀 계수
 
 
 
-
+# (정답) 0.873
 
 #%%
 
 # =============================================================================
-# 2.GRE 점수의 평균 이상을 받은 그룹과 평균 미만을 받은 그룹의 CGPA 평균은 차이가
+# 2. GRE 점수의 평균 이상을 받은 그룹과 평균 미만을 받은 그룹의 CGPA 평균은 차이가
 # 있는지
 # 검정을 하고자 한다.
 # - 적절한 검정 방법을 선택하고 양측 검정을 수행하시오 (등분산으로 가정)
@@ -195,21 +201,21 @@ ols1.params # 절편 및 회귀 계수
 # 기술하시오.
 # (답안 예시) 1.23
 # =============================================================================
+# 1. 변수 생성
+# - GRE 점수의 평균 이상을 받은 그룹(1)과 평균 미만(0)을 받은 그룹 생성
 
 
+# 2. 독립인 이표본 T 검정 진행
 
 
+# 3. 추정치 = 검정(추정) 통계량, t 통계량
 
-
-
-
-
-
+#  (정답) 19.44
 
 #%%
 
 # =============================================================================
-# 3.Chance_of_Admit 확률이 0.5를 초과하면 합격으로, 이하이면 불합격으로 구분하고
+# 3.Chance_of_Admit 확률이 0.5를 초과하면 합격(1)으로, 이하이면 불합격(0)으로 구분하고
 # 로지스틱 회귀분석을 수행하시오.
 # - 원데이터만 사용하고, 원데이터 가운데 Serial_No와 Label은 모형에서 제외
 # - 각 설정값은 다음과 같이 지정하고, 언급되지 않은 사항은 기본 설정값을 사용하시오
@@ -219,12 +225,28 @@ ols1.params # 절편 및 회귀 계수
 # (로지스틱 회귀계수는 반올림하여 소수점 둘째 자리까지 / Intercept는 제외)
 # (답안 예시) abc, 0.12
 # =============================================================================
+# 종속변수와 동일한 변수는 입력 변수에 추가되지 않도록 주의
+data7.columns
+# ['Serial_No', 'GRE', 'TOEFL', 'University_Rating', 'SOP', 'LOR', 'CGPA',
+#  'Research', 'Chance_of_Admit']
+q3 = data7.copy()
 
+x_var = q3.columns.drop(['Serial_No', 'Chance_of_Admit'])
 
+import numpy as np
+q3['PASS'] = np.where(q3['Chance_of_Admit'] > 0.5, 1, 0)
 
+from sklearn.linear_model import LogisticRegression
+# 제시문에서 주어진 조건!
+logit = LogisticRegression(solver='liblinear', random_state =12)
+logit.fit(q3[x_var], q3['PASS'])
 
+logit.coef_ # 회귀 계수
+# 회귀계수를 절대값을 취한 후 회귀 계수가 가장 큰 입력 변수
+x_var[abs(logit.coef_).argmax()]
+abs(logit.coef_).max()
 
-
+# (정답) 'CGPA', 1.9785850899103576
 
 #%%
 
@@ -256,6 +278,10 @@ ols1.params # 절편 및 회귀 계수
 # from sklearn.linear_model import LinearRegression
 # =============================================================================
 
+import pandas as pd
+
+data8 = pd.read_csv('./Dataset/Dataset_08.csv')
+
 #%%
 
 # =============================================================================
@@ -263,10 +289,15 @@ ols1.params # 절편 및 회귀 계수
 # 기술하시오(주 이름 기준).
 # (답안 예시) 0.12, 0.34, 0.54
 # =============================================================================
+data8.columns
+# ['RandD_Spend', 'Administration', 'Marketing_Spend', 'State', 'Profit']
+data8['State'].value_counts(normalize=True).sort_index()
 
+# California    0.34
+# Florida       0.32
+# New York      0.34
 
-
-
+# (정답) [0.34, 0.32, 0.34]
 
 
 #%%
@@ -276,11 +307,16 @@ ols1.params # 절편 및 회귀 계수
 # 차이값은 소수점 이하는 버리고 정수부분만 기술하시오. (답안 예시) 1234
 # =============================================================================
 
+q2 = data8.copy()
 
+q2_tab=\
+pd.pivot_table(data=q2, 
+               index='State',
+               values='Profit')
 
+q2_tab.max()-q2_tab.min()
 
-
-
+# (정답) 14868
 
 
 #%%
