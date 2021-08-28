@@ -712,7 +712,9 @@ temp[['TIME']].values.reshape(-1,1)
 # from sklearn.tree import export_graphviz
 # import pydot
 
-
+import pandas as pd
+data5 = pd.read_csv('./Dataset/Dataset_05.csv', na_values=['?', 'NA','', ' '])
+# 읽어 올때부터 처리함. na_values=['?', 'NA','', ' ']
 #%%
 
 # =============================================================================
@@ -722,9 +724,10 @@ temp[['TIME']].values.reshape(-1,1)
 # (String 타입 변수의 경우 White Space(Blank)를 결측으로 처리한다) (답안 예시) 123
 # =============================================================================
 
+data5.info()
+data5.isnull().sum().sum()
 
-
-
+# (정답) 1166
 
 
 #%%
@@ -736,9 +739,21 @@ temp[['TIME']].values.reshape(-1,1)
 # (답안 예시) 0.2345, N
 # =============================================================================
 
+q2 = data5.dropna()
 
+q2.columns
+# ['ID', 'Age', 'Age_gr', 'Gender', 'Work_Experience', 'Family_Size',
+#       'Ever_Married', 'Graduated', 'Profession', 'Spending_Score', 'Var_1',
+#       'Segmentation']
+q2_tab = pd.crosstab(index=q2.Gender, columns=q2.Segmentation)
 
+from scipy.stats import chi2_contingency
 
+q2_out = chi2_contingency(q2_tab)
+
+round(q2_out[1], 4) < 0.05
+
+# (정답) 0.0031, Y
 
 #%%
 
@@ -760,5 +775,34 @@ temp[['TIME']].values.reshape(-1,1)
 # (답안 예시) 0.12
 # =============================================================================
 
+# (1) 결측치 제거
+q3 = data5.dropna()
+# (2) Segmentation 값이 'A',  'D' 인 데이터 필터링
+q3 = q3[~q3.Segmentation.isin(['A','D'])]
 
+# (3) Train대 Test 7대 3으로 데이터를 분리(Seed = 123)
+
+from sklearn.model_selection import train_test_split
+
+train, test =\
+    train_test_split(q3, test_size=0.3,
+                     random_state=123)
+    
+# (4) 의사결정 나무 작성
+# • Feature: Age_gr, Gender, Work_Experience, Family_Size, 
+#             Ever_Married, Graduated, Spending_Score
+# • Label : Segmentation
+# • Parameter : Gini / Max Depth = 7 / Seed = 123
+
+x_var = ['Age_gr', 'Gender', 'Work_Experience', 'Family_Size', 
+         'Ever_Married', 'Graduated', 'Spending_Score']
+from sklearn.tree import DecisionTreeClassifier
+
+dt = DecisionTreeClassifier(max_depth=7, random_state=123)
+dt.fit(train[x_var], train['Segmentation'])
+
+# (5) Test 데이터로 평가, 정확도(Accuracy)를 소수점 셋째 자리 이하는 버리고 소수점
+dt.score(test[x_var], test['Segmentation'])
+
+# 0.6197458455522972 => 0.62
 
